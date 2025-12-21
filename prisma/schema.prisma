@@ -1,0 +1,180 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int      @id @default(autoincrement())
+  name           String
+  email          String   @unique
+  password       String
+  role           Role     @default(CUSTOMER)
+  referralCode   String   @unique @map("referral_code")
+  referredBy     Int?     @map("referred_by")
+  points         Int      @default(0)
+  totalReferrals Int      @default(0) @map("total_referrals")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  referrer       User?          @relation("UserReferrals", fields: [referredBy], references: [id])
+  referrals      User[]         @relation("UserReferrals")
+  organizer      Organizer?
+  events         Event[]
+  transactions   Transaction[]
+  reviews        Review[]
+  notifications  Notification[]
+
+  @@map("users")
+}
+
+model Organizer {
+  id            Int     @id @default(autoincrement())
+  userId        Int     @unique @map("user_id")
+  companyName   String? @map("company_name")
+  phone         String?
+  address       String?
+  totalEvents   Int     @default(0) @map("total_events")
+  averageRating Float   @default(0) @map("average_rating")
+  totalReviews  Int     @default(0) @map("total_reviews")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("organizers")
+}
+
+model Event {
+  id            Int         @id @default(autoincrement())
+  title         String
+  description   String
+  date          DateTime
+  time          String
+  location      String
+  category      Category
+  price         Int         @default(0)
+  availableSeats Int        @map("available_seats")
+  totalSeats    Int         @map("total_seats")
+  organizerId   Int         @map("organizer_id")
+  icon          String      @default("🎉")
+  averageRating Float       @default(0) @map("average_rating")
+  totalReviews  Int         @default(0) @map("total_reviews")
+  status        EventStatus @default(ACTIVE)
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+
+  // Relations
+  organizer    User          @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+  reviews      Review[]
+
+  @@map("events")
+}
+
+model Transaction {
+  id            Int               @id @default(autoincrement())
+  userId        Int               @map("user_id")
+  eventId       Int               @map("event_id")
+  quantity      Int
+  originalPrice Int               @map("original_price")
+  pointsUsed    Int               @default(0) @map("points_used")
+  finalPrice    Int               @map("final_price")
+  status        TransactionStatus @default(WAITING_PAYMENT)
+  paymentProof  String?           @map("payment_proof")
+  expiresAt     DateTime?         @map("expires_at")
+  createdAt     DateTime          @default(now()) @map("created_at")
+  updatedAt     DateTime          @updatedAt @map("updated_at")
+
+  // Relations
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@map("transactions")
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  eventId   Int      @map("event_id")
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+  @@map("reviews")
+}
+
+model Notification {
+  id        Int              @id @default(autoincrement())
+  userId    Int              @map("user_id")
+  title     String
+  message   String
+  type      NotificationType
+  isRead    Boolean          @default(false) @map("is_read")
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+// Enums
+enum Role {
+  CUSTOMER
+  ORGANIZER
+
+  @@map("role")
+}
+
+enum Category {
+  MUSIK
+  TEKNOLOGI
+  OLAHRAGA
+  SENI
+  BISNIS
+  MAKANAN
+
+  @@map("category")
+}
+
+enum EventStatus {
+  ACTIVE
+  CANCELLED
+  COMPLETED
+
+  @@map("event_status")
+}
+
+enum TransactionStatus {
+  WAITING_PAYMENT
+  WAITING_CONFIRMATION
+  DONE
+  REJECTED
+  EXPIRED
+  CANCELED
+
+  @@map("transaction_status")
+}
+
+enum NotificationType {
+  PAYMENT_APPROVED
+  PAYMENT_REJECTED
+  EVENT_REMINDER
+  SYSTEM
+
+  @@map("notification_type")
+}

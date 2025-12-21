@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - EventKu</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .admin-container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 20px;
+        }
+        .admin-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        .pending-transactions {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .admin-transaction-item {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            background: #f8f9fa;
+        }
+        .admin-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .btn-approve {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-approve:hover {
+            background: #218838;
+        }
+        .btn-reject {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-reject:hover {
+            background: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>🛠️ Admin Panel EventKu</h1>
+            <p>Kelola konfirmasi pembayaran transaksi</p>
+        </div>
+        
+        <div class="pending-transactions">
+            <h2>Transaksi Menunggu Konfirmasi</h2>
+            <div id="pendingTransactionsList">
+                <!-- Pending transactions will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load transactions from main app (in real app, this would be from API)
+        function loadPendingTransactions() {
+            // Get transactions from localStorage or simulate
+            const transactions = JSON.parse(localStorage.getItem('eventku_transactions') || '[]');
+            const pendingTransactions = transactions.filter(t => t.status === 'waiting_confirmation');
+            
+            const container = document.getElementById('pendingTransactionsList');
+            
+            if (pendingTransactions.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666;">Tidak ada transaksi yang menunggu konfirmasi.</p>';
+                return;
+            }
+            
+            container.innerHTML = pendingTransactions.map(transaction => `
+                <div class="admin-transaction-item">
+                    <h4>Transaksi #${transaction.id}</h4>
+                    <p><strong>Event:</strong> ${transaction.eventTitle}</p>
+                    <p><strong>Jumlah Tiket:</strong> ${transaction.quantity}</p>
+                    <p><strong>Total Bayar:</strong> Rp ${transaction.finalPrice.toLocaleString('id-ID')}</p>
+                    <p><strong>Points Digunakan:</strong> ${transaction.pointsUsed.toLocaleString('id-ID')}</p>
+                    <p><strong>Tanggal Transaksi:</strong> ${new Date(transaction.createdAt).toLocaleDateString('id-ID')}</p>
+                    <p><strong>Bukti Pembayaran:</strong> ${transaction.paymentProof || 'Belum ada'}</p>
+                    
+                    <div class="admin-actions">
+                        <button class="btn-approve" onclick="approveTransaction(${transaction.id})">
+                            ✅ Setujui
+                        </button>
+                        <button class="btn-reject" onclick="rejectTransaction(${transaction.id})">
+                            ❌ Tolak
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function approveTransaction(transactionId) {
+            if (confirm('Apakah Anda yakin ingin menyetujui transaksi ini?')) {
+                // In real app, this would call API
+                const transactions = JSON.parse(localStorage.getItem('eventku_transactions') || '[]');
+                const transaction = transactions.find(t => t.id === transactionId);
+                if (transaction) {
+                    transaction.status = 'done';
+                    localStorage.setItem('eventku_transactions', JSON.stringify(transactions));
+                    alert('Transaksi berhasil disetujui!');
+                    loadPendingTransactions();
+                }
+            }
+        }
+        
+        function rejectTransaction(transactionId) {
+            if (confirm('Apakah Anda yakin ingin menolak transaksi ini? Points dan kursi akan dikembalikan.')) {
+                // In real app, this would call API
+                const transactions = JSON.parse(localStorage.getItem('eventku_transactions') || '[]');
+                const transaction = transactions.find(t => t.id === transactionId);
+                if (transaction) {
+                    transaction.status = 'rejected';
+                    localStorage.setItem('eventku_transactions', JSON.stringify(transactions));
+                    alert('Transaksi ditolak. Points dan kursi akan dikembalikan.');
+                    loadPendingTransactions();
+                }
+            }
+        }
+        
+        // Load on page load
+        loadPendingTransactions();
+        
+        // Refresh every 30 seconds
+        setInterval(loadPendingTransactions, 30000);
+    </script>
+</body>
+</html>

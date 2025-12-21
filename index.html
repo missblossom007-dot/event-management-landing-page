@@ -19,9 +19,15 @@
                     <span></span>
                 </div>
                 <div class="nav-links" id="navLinks">
-                    <a href="#" class="nav-link">Beranda</a>
-                    <a href="#" class="nav-link">Event Saya</a>
-                    <a href="#" class="nav-link btn-create" id="createEventBtn">Buat Event</a>
+                    <a href="#" class="nav-link" id="homeLink">Beranda</a>
+                    <a href="#" class="nav-link" id="dashboardLink" onclick="showDashboard()" style="display: none;">Dashboard</a>
+                    <a href="#" class="nav-link" id="transactionsLink" onclick="showMyTransactions()" style="display: none;">Transaksi Saya</a>
+                    <a href="#" class="nav-link" id="reviewsLink" onclick="showMyReviews()" style="display: none;">Review Saya</a>
+                    <a href="#" class="nav-link" id="pointsDisplay" style="display: none;">Points: 0</a>
+                    <a href="#" class="nav-link btn-create" id="createEventBtn" style="display: none;">Buat Event</a>
+                    <a href="#" class="nav-link" id="loginBtn" onclick="showLogin()">Login</a>
+                    <a href="#" class="nav-link" id="registerBtn" onclick="showRegister()">Register</a>
+                    <a href="#" class="nav-link" id="logoutBtn" onclick="logout()" style="display: none;">Logout</a>
                 </div>
             </div>
         </nav>
@@ -89,9 +95,158 @@
                     <option value="makanan">Makanan & Minuman</option>
                 </select>
                 <input type="number" id="eventPrice" placeholder="Harga (Rp)" min="0">
+                <input type="number" id="eventSeats" placeholder="Jumlah Kursi" min="1" required>
                 <textarea id="eventDescription" placeholder="Deskripsi Event" rows="4" required></textarea>
                 <button type="submit" class="btn-submit">Buat Event</button>
             </form>
+        </div>
+    </div>
+
+    <!-- Modal for Transaction -->
+    <div id="transactionModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeTransactionModal()">&times;</span>
+            <div id="transactionModalBody"></div>
+        </div>
+    </div>
+
+    <!-- Modal for Payment -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="paymentModal.style.display='none'">&times;</span>
+            <div id="paymentModalBody"></div>
+        </div>
+    </div>
+
+    <!-- Modal for Reviews -->
+    <div id="reviewModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="reviewModal.style.display='none'">&times;</span>
+            <div id="reviewModalBody"></div>
+        </div>
+    </div>
+
+    <!-- Modal for Write Review -->
+    <div id="writeReviewModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="writeReviewModal.style.display='none'">&times;</span>
+            <h2>Tulis Review</h2>
+            <form id="writeReviewForm">
+                <div class="rating-input">
+                    <label>Rating:</label>
+                    <div class="star-rating">
+                        <span class="star" data-rating="1">★</span>
+                        <span class="star" data-rating="2">★</span>
+                        <span class="star" data-rating="3">★</span>
+                        <span class="star" data-rating="4">★</span>
+                        <span class="star" data-rating="5">★</span>
+                    </div>
+                    <input type="hidden" id="reviewRating" required>
+                </div>
+                <textarea id="reviewComment" placeholder="Tulis review Anda tentang event ini..." rows="4" required></textarea>
+                <input type="hidden" id="reviewEventId">
+                <button type="submit" class="btn-submit">Kirim Review</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal for Login -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="loginModal.style.display='none'">&times;</span>
+            <h2>Login</h2>
+            <form id="loginForm">
+                <input type="email" id="loginEmail" placeholder="Email" required>
+                <input type="password" id="loginPassword" placeholder="Password" required>
+                <button type="submit" class="btn-submit">Login</button>
+            </form>
+            <p style="text-align: center; margin-top: 1rem;">
+                Belum punya akun? <a href="#" onclick="showRegister(); loginModal.style.display='none';">Daftar di sini</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Modal for Register -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="registerModal.style.display='none'">&times;</span>
+            <h2>Daftar Akun</h2>
+            <form id="registerForm">
+                <input type="text" id="registerName" placeholder="Nama Lengkap" required>
+                <input type="email" id="registerEmail" placeholder="Email" required>
+                <input type="password" id="registerPassword" placeholder="Password" minlength="6" required>
+                <input type="password" id="registerConfirmPassword" placeholder="Konfirmasi Password" required>
+                <select id="registerRole" required>
+                    <option value="">Pilih Role</option>
+                    <option value="customer">Customer</option>
+                    <option value="organizer">Event Organizer</option>
+                </select>
+                <input type="text" id="referralCode" placeholder="Kode Referral (Opsional)">
+                <button type="submit" class="btn-submit">Daftar</button>
+            </form>
+            <p style="text-align: center; margin-top: 1rem;">
+                Sudah punya akun? <a href="#" onclick="showLogin(); registerModal.style.display='none';">Login di sini</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Modal for User Profile -->
+    <div id="profileModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="profileModal.style.display='none'">&times;</span>
+            <div id="profileModalBody"></div>
+        </div>
+    </div>
+
+    <!-- Modal for Dashboard -->
+    <div id="dashboardModal" class="modal">
+        <div class="modal-content dashboard-modal">
+            <span class="close" onclick="dashboardModal.style.display='none'">&times;</span>
+            <div id="dashboardModalBody"></div>
+        </div>
+    </div>
+
+    <!-- Modal for Edit Event -->
+    <div id="editEventModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="editEventModal.style.display='none'">&times;</span>
+            <h2>Edit Event</h2>
+            <form id="editEventForm">
+                <input type="hidden" id="editEventId">
+                <input type="text" id="editEventTitle" placeholder="Judul Event" required>
+                <input type="date" id="editEventDate" required>
+                <input type="time" id="editEventTime" required>
+                <input type="text" id="editEventLocation" placeholder="Lokasi" required>
+                <select id="editEventCategory" required>
+                    <option value="">Pilih Kategori</option>
+                    <option value="musik">Musik</option>
+                    <option value="teknologi">Teknologi</option>
+                    <option value="olahraga">Olahraga</option>
+                    <option value="seni">Seni & Budaya</option>
+                    <option value="bisnis">Bisnis</option>
+                    <option value="makanan">Makanan & Minuman</option>
+                </select>
+                <input type="number" id="editEventPrice" placeholder="Harga (Rp)" min="0">
+                <input type="number" id="editEventSeats" placeholder="Jumlah Kursi" min="1" required>
+                <textarea id="editEventDescription" placeholder="Deskripsi Event" rows="4" required></textarea>
+                <button type="submit" class="btn-submit">Update Event</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal for Transaction Management -->
+    <div id="transactionManagementModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="transactionManagementModal.style.display='none'">&times;</span>
+            <div id="transactionManagementBody"></div>
+        </div>
+    </div>
+
+    <!-- Modal for Attendee List -->
+    <div id="attendeeModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="attendeeModal.style.display='none'">&times;</span>
+            <div id="attendeeModalBody"></div>
         </div>
     </div>
 
